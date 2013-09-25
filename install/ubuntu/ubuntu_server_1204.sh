@@ -30,6 +30,11 @@ else
   exit
 fi
 
+if [! $userPassword ] ; then
+  echo "Please pass domain_var"
+  exit
+fi
+
 echo "Host localhost
    StrictHostKeyChecking no
    UserKnownHostsFile=/dev/null" | sudo tee -a /etc/ssh/ssh_config
@@ -131,13 +136,13 @@ sudo rm -rf /tmp/gitolite-admin
 #==
 #== 5. MySQL
 #==
-sudo apt-get install -y makepasswd # Needed to create a unique password non-interactively.
-userPassword=$(makepasswd --char=10) # Generate a random MySQL password
+#sudo apt-get install -y makepasswd # Needed to create a unique password non-interactively.
+#userPassword=$(makepasswd --char=10) # Generate a random MySQL password
 # Note that the lines below creates a cleartext copy of the random password in /var/cache/debconf/passwords.dat
 # This file is normally only readable by root and the password will be deleted by the package management system after install.
-echo mysql-server mysql-server/root_password password $userPassword | sudo debconf-set-selections
-echo mysql-server mysql-server/root_password_again password $userPassword | sudo debconf-set-selections
-sudo apt-get install -y mysql-server mysql-client libmysqlclient-dev
+#echo mysql-server mysql-server/root_password password $userPassword | sudo debconf-set-selections
+#echo mysql-server mysql-server/root_password_again password $userPassword | sudo debconf-set-selections
+#sudo apt-get install -y mysql-server mysql-client libmysqlclient-dev
 
 #==
 #== 6. GitLab
@@ -178,19 +183,7 @@ sudo chmod +x /etc/init.d/gitlab
 sudo update-rc.d gitlab defaults 21
 
 
-#==
-#== 7. Nginx
-#==
-sudo apt-get install -y nginx
-sudo wget https://raw.github.com/gitlabhq/gitlab-recipes/4-0-stable/nginx/gitlab -P /etc/nginx/sites-available/
-sudo ln -s /etc/nginx/sites-available/gitlab /etc/nginx/sites-enabled/gitlab
-
-
-sudo sed -i 's/YOUR_SERVER_IP:80/80/' /etc/nginx/sites-available/gitlab # Set Domain
-sudo sed -i "s/YOUR_SERVER_FQDN/$domain_var/" /etc/nginx/sites-available/gitlab
-
 # Start all
 
 sudo service gitlab start
-sudo service nginx start
 
